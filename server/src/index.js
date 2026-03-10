@@ -2,15 +2,57 @@
 // Boilerplate Code to Set Up Server
 // ---------------------------------
 
+// importing our Node modules
+import express from "express"; // the framework that lets us build a web server
+import pg from "pg" // pg stands for Postgres SQL, for connecting to the database
+import config from "./config.js" //
+
+const app = express(); // creating an instance of the express module
+
+app.use(express.json()); // This server will receive and respond in JSON format
+
+const port = 3000; // Setting which port to listen to to receive requests
+
+// connect to our PostgresSQL database, or db for short
+const db = new pg.Pool({
+    connectionString: config.databaseUrl, // this contains credentials to access the database. 
+    // keep this private
+    ssl: true
+})
+
+//defining our port, then turning on our server to listen for requests
+app.listen(port, () => {
+  console.log(`Server is listening on port ${port}`);
+});
 // ---------------------------------
 // Helper Functions
 // ---------------------------------
 
 // 1. getAllAnimals()
 
+async function getAllAnimals() {
+    const result = await db.query("SELECT * FROM animals")
+    console.log(result.rows)
+    return result.rows
+}
+
 // 2. getOneAnimalByName(name)
+// db.query() takes in 2 parameters
+// 1. A string that holds the SQL command
+// 2. An array that holds the values for the placeholds (starting at $1, tehn $2, $3, and so on)
+
+async function getOneAnimalByName(name) {
+    const result = await db.query("SELECT * FROM animals WHERE name = $1", [name])
+    console.log(result)
+    return result.rows[0]
+}
 
 // 3. getOneAnimalById(id)
+
+async function getOneAnimalById(id) {
+    const result = await db.query("Select * FROM id WHERE id = $1", [id])
+    console.log(result)
+}
 
 // 4. getNewestAnimal()
 
@@ -32,12 +74,32 @@
 // ---------------------------------
 // API Endpoints
 // ---------------------------------
+// ---------------------------------
+// API Endpoints
+// ---------------------------------
 
 // 1. GET /get-all-animals
 
+app.get("/get-all-animals", async (req, res) => {
+  const animals = await getAllAnimals();
+  res.json(animals);
+});
+
 // 2. GET /get-one-animal-by-name/:name
+app.get("/get-one-animal-by-name/:name", async (req, res) => {
+  let name = req.params.name
+  const animal = await getOneAnimalByName(name)
+  res.json(animal)
+})
+
 
 // 3. GET /get-one-animal-by-id/:id
+
+app.get("/get-one-animal-by-id/:id", async (req, res) => {
+  let id = req.params.id
+  const animal = await getOneAnimalById(id)
+  res.json(animal)
+})
 
 // 4. GET /get-newest-animal
 
